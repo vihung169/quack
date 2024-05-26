@@ -82,7 +82,7 @@ def get_list_reload():
                 if(item['type_egg'] > 7):
                     print("type: ", item['type_egg'])
                     print("nest: ", item['id'])
-                    if(len(list_duck) <= max_duck):
+                    if(len(list_duck) < max_duck):
                         print("Good egg")
                         # Hatch egg
                         hatch_egg(item['id'])
