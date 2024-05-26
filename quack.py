@@ -5,13 +5,14 @@ import sys
 
 data = {}
 with open('data.json', 'r') as f:
-    # Đọc dữ liệu từ tệp
     data = json.load(f)
 
 ACCESS_TOKEN =  data['state']['token']
 list_collect = []
 list_duck = []
 count_collect_today = 0
+max_duck = 0
+
 def get_total_egg():
     headers = {
         "accept": "*/*",
@@ -78,7 +79,15 @@ def get_list_reload():
                     'type_egg': item['type_egg'],
                 }
                 if(item['type_egg'] > 7):
-                    print("Good egg")
+                    print("type: ", item['type_egg'])
+                    print("nest: ", item['id'])
+                    if(len(list_duck) <= max_duck):
+                        print("Good egg")
+                        # Hatch egg
+                        hatch_egg(item['id'])
+                        time.sleep(4)
+                        collect_duck(item['id'])
+                        # Collect egg
                 nest_list.append(nest_data)
         
         if(nest_list != list_collect):
@@ -86,12 +95,8 @@ def get_list_reload():
         print("-"*100)
         print("So trung co the thu thap:", len(list_collect))
         for collect in list_collect:
-            print("Collect: ", collect['id'])
-            print("Egg Type: ", collect['type_egg'])
+            print("Collect: ", collect)
 
-            # TODO
-            # ! Collect duck
-            # 
         print("-"*100)
     else:
         print("Error: ", response.status_code)
@@ -182,7 +187,6 @@ def remove_duck(duck):
     else:
         print("Remove duck failed: ", duck)
         print("Error: ", response.text)
-        time.sleep(0.2)
 
 
 def collect_duck(egg):
@@ -204,7 +208,7 @@ def collect_duck(egg):
 
     data = {"nest_id": egg}
 
-    response = requests.post("https://api.quackquack.games/duck/collect", headers=headers, data=data)
+    response = requests.post("https://api.quackquack.games/nest/collect-duck", headers=headers, data=data)
 
     if response.status_code == 200:
         print("Collect duck success: ", egg)
@@ -213,12 +217,73 @@ def collect_duck(egg):
         print("Error: ", response.text)
         time.sleep(0.2)
 
+def hatch_egg(egg):
+    headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,vi;q=0.8",
+        "authorization": "Bearer " + ACCESS_TOKEN,
+        "content-type": "application/x-www-form-urlencoded",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://dd42189ft3pck.cloudfront.net/",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    }
+
+    data = {"nest_id": egg}
+
+    response = requests.post("https://api.quackquack.games/nest/hatch", headers=headers, data=data)
+
+    if response.status_code == 200:
+        print("Hatch egg success: ", egg)
+    else:
+        print("Hatch egg failed: ", egg)
+        print("Error: ", response.text)
+
+
+def get_max_duck():
+    global max_duck
+    headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,vi;q=0.8",
+        "authorization": "Bearer " + ACCESS_TOKEN,
+        "content-type": "application/x-www-form-urlencoded",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://dd42189ft3pck.cloudfront.net/",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    }
+
+    response = requests.get("https://api.quackquack.games/nest/max-duck", headers=headers)
+
+    if response.status_code == 200:
+        max_duck = response.json()['data']['max_duck']
+        print("Max duck: ", max_duck)
+    else:
+        print("Get max duck failed")
+
+
 get_list_reload()
 start_time = time.time()
 while True:
-    get_list_reload()
-    get_total_egg()
-    collect()
-    print(f"Time: {round(time.time() - start_time)}s")
-    print(f"Collect: {count_collect_today} eggs")
-    time.sleep(2)
+    try:
+        get_list_reload()
+        get_total_egg()
+        collect()
+        print(f"Time: {round(time.time() - start_time)}s")
+        print(f"Collect: {count_collect_today} eggs")
+        print(f"Current Duck: {len(list_duck)}")
+        get_max_duck()
+        time.sleep(2)
+    except Exception as e:
+        print(e)
+        pass
