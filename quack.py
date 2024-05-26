@@ -1,7 +1,8 @@
 import requests
 import time
 import json
-import sys
+from threading import Thread
+
 
 data = {}
 with open('data.json', 'r') as f:
@@ -93,7 +94,7 @@ def get_list_reload():
         if(nest_list != list_collect):
             list_collect = nest_list
         print("-"*100)
-        print("So trung co the thu thap:", len(list_collect))
+        print("Egg ready to collect:", len(list_collect))
         for collect in list_collect:
             print("Collect: ", collect)
 
@@ -271,19 +272,120 @@ def get_max_duck():
     else:
         print("Get max duck failed")
 
+def get_gold_duck_info():
+    global time_to_gold_duck
+    headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,vi;q=0.8",
+        "authorization": "Bearer " + ACCESS_TOKEN,
+        "content-type": "application/x-www-form-urlencoded",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://dd42189ft3pck.cloudfront.net/",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    }
 
-get_list_reload()
-start_time = time.time()
-while True:
-    try:
-        get_list_reload()
-        get_total_egg()
-        collect()
-        print(f"Time: {round(time.time() - start_time)}s")
-        print(f"Collect: {count_collect_today} eggs")
-        print(f"Current Duck: {len(list_duck)}")
-        get_max_duck()
-        time.sleep(2)
-    except Exception as e:
-        print(e)
-        pass
+    response = requests.get("https://api.quackquack.games/golden-duck/info", headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data['data']['time_to_golden_duck']
+    else:
+        print("Get gold duck info failed")
+
+def reward_gold_duck():
+    headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,vi;q=0.8",
+        "authorization": "Bearer " + ACCESS_TOKEN,
+        "content-type": "application/x-www-form-urlencoded",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://dd42189ft3pck.cloudfront.net/",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    }
+
+    response = requests.get("https://api.quackquack.games/golden-duck/reward", headers=headers)
+
+    if response.status_code == 200:
+        print("Reward gold duck success")
+        data = response.json()
+        return data['data']['type']
+
+def claim_gold_duck(type):
+    is_success = False 
+    headers = {
+        "accept": "*/*",
+        "accept-language": "en-US,en;q=0.9,vi;q=0.8",
+        "authorization": "Bearer " + ACCESS_TOKEN,
+        "content-type": "application/x-www-form-urlencoded",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "Referer": "https://dd42189ft3pck.cloudfront.net/",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    }
+    body = {"type": type}
+    response = requests.get("https://api.quackquack.games/golden-duck/claim", headers=headers, data=body)
+
+    if response.status_code == 200:
+        print("Claim gold duck success")
+        is_success = True
+    return is_success
+
+def app_main():
+    get_list_reload()
+    start_time = time.time()
+    while True:
+        try:
+            get_list_reload()
+            get_total_egg()
+            collect()
+            print(f"Time: {round(time.time() - start_time)}s")
+            print(f"Collect: {count_collect_today} eggs")
+            print(f"Current Duck: {len(list_duck)}")
+            get_max_duck()
+            time.sleep(2)
+        except Exception as e:
+            print(e)
+            pass
+
+def gold_duck_threading():
+    while True:
+        try:
+            time_to_collect_gold_duck = get_gold_duck_info()
+            print("next time to collect gold duck: ", time_to_collect_gold_duck)
+            if(time_to_collect_gold_duck == 0):
+                type = reward_gold_duck()
+                if(claim_gold_duck(type)):
+                    print("Claim gold duck success")
+                else:
+                    print("Claim gold duck failed")
+            else:
+                time.sleep(time_to_collect_gold_duck)
+        except Exception as e:
+            print(e)
+
+if __name__ == "__main__":
+    t1 = Thread(target=app_main, name="app_main")
+    t2 = Thread(target=gold_duck_threading, name="gold_duck_threading")
+
+    t1.start()
+    t2.start()
+
+    while True: 
+        time.sleep(10)
