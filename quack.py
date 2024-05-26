@@ -93,7 +93,7 @@ def get_list_reload():
         
         if(nest_list != list_collect):
             list_collect = nest_list
-        print("-"*100)
+        print("-"*10)
         print("Egg ready to collect:", len(list_collect))
         for collect in list_collect:
             print("Collect: ", collect)
@@ -341,7 +341,7 @@ def claim_gold_duck(type):
     }
     body = {"type": type}
     response = requests.get("https://api.quackquack.games/golden-duck/claim", headers=headers, data=body)
-
+    print(response.text)
     if response.status_code == 200:
         print("Claim gold duck success")
         is_success = True
