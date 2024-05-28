@@ -340,7 +340,7 @@ def claim_gold_duck(type):
         "Referrer-Policy": "strict-origin-when-cross-origin",
     }
     body = {"type": type}
-    response = requests.get("https://api.quackquack.games/golden-duck/claim", headers=headers, data=body)
+    response = requests.post("https://api.quackquack.games/golden-duck/claim", headers=headers, data=body)
     print(response.text)
     if response.status_code == 200:
         print("Claim gold duck success")
@@ -371,10 +371,11 @@ def gold_duck_threading():
             print("next time to collect gold duck: ", time_to_collect_gold_duck)
             if(time_to_collect_gold_duck == 0):
                 type = reward_gold_duck()
-                if(claim_gold_duck(type)):
-                    print("Claim gold duck success")
-                else:
-                    print("Claim gold duck failed")
+                if type > 0:
+                    if(claim_gold_duck(type)):
+                        print("Claim gold duck success")
+                    else:
+                        print("Claim gold duck failed")
             else:
                 time.sleep(time_to_collect_gold_duck)
         except Exception as e:
