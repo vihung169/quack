@@ -2,7 +2,7 @@ import requests
 import time
 import json
 from threading import Thread
-
+import random
 
 data = {}
 with open('data.json', 'r') as f:
@@ -85,7 +85,7 @@ def get_list_reload():
                     if(len(list_duck) < max_duck):
                         print("Good egg")
                         # Hatch egg
-                        hatch_egg(item['id'])
+                        take_egg(item['id'])
                         time.sleep(4)
                         collect_duck(item['id'])
                         # Collect egg
@@ -218,7 +218,7 @@ def collect_duck(egg):
         print("Error: ", response.text)
         time.sleep(0.2)
 
-def hatch_egg(egg):
+def take_egg(egg):
     headers = {
         "accept": "*/*",
         "accept-language": "en-US,en;q=0.9,vi;q=0.8",
@@ -359,7 +359,7 @@ def app_main():
             print(f"Collect: {count_collect_today} eggs")
             print(f"Current Duck: {len(list_duck)}")
             get_max_duck()
-            time.sleep(2)
+            time.sleep(random.randrange(2, 10))
         except Exception as e:
             print(e)
             pass
